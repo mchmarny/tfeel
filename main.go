@@ -16,14 +16,32 @@ func main() {
 	// TODO: externalize
 	searchTerms := []string{"google", "cloud", "data", "partner"}
 
-	ingestor := newIngest()
+	// messages channel with some buffer
+	// TODO: externalize channel size
+	messages := make(chan Message, 10)
 
-	err := ingestor.start(searchTerms)
-	if err != nil {
-		log.Fatal(err)
+	// configure publisher
+	p, pErr := newPublisher()
+	if pErr != nil {
+		log.Fatal(pErr)
 	}
 
-	defer ingestor.stop()
+	// configure ingester
+	ingester := newIngester()
+	iErr := ingester.start(searchTerms, messages)
+	if iErr != nil {
+		log.Fatal(iErr)
+	}
+	defer ingester.stop()
+
+	go func() {
+		for {
+			select {
+			case m := <-messages:
+				p.pub(m)
+			}
+		}
+	}()
 
 	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
 	ch := make(chan os.Signal)
