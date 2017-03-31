@@ -1,15 +1,20 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 
 	"cloud.google.com/go/pubsub"
+	"google.golang.org/api/option"
 )
 
 type publisher struct {
+	ctx    context.Context
 	client *pubsub.Client
+	topic  *pubsub.Topic
 }
 
 func newPublisher() (*publisher, error) {
@@ -25,19 +30,56 @@ func newPublisher() (*publisher, error) {
 		return nil, errors.New("GCP PubSub topic name variable required (PUBSUB_TOPIC)")
 	}
 
-	/*
-		ctx := context.Background()
-		client, err := pubsub.NewClient(ctx, projectID)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to create client: %v", err)
-		}
-	*/
+	saFilePath := os.Getenv("SERVICE_ACCOUNT_FILE_PATH")
+	if saFilePath == "" {
+		return nil, errors.New("Service account file path not set")
+	}
 
-	pub := &publisher{}
-	//pub.client = client
+	fmt.Println("Acquiring service account config...")
+	optArgs := option.WithServiceAccountFile(saFilePath)
+
+	fmt.Println("Creating context...")
+	ctx := context.Background()
+
+	fmt.Println("Creating pubsub client...")
+	client, err := pubsub.NewClient(ctx, projectID, optArgs)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create client: %v", err)
+	}
+
+	fmt.Println("Creating pubsub topic...")
+	topic, topicErr := client.CreateTopic(ctx, topicName)
+	if topicErr != nil {
+		fmt.Println("Topic already exists")
+	}
+
+	pub := &publisher{
+		ctx:    ctx,
+		client: client,
+		topic:  topic,
+	}
+
+	fmt.Println("Publisher configured")
 	return pub, nil
 }
 
-func (p *publisher) pub(m Message) {
-	fmt.Println(m.toString())
+// pub publishes messahes using precreated client
+func (p *publisher) pub(m Message) error {
+
+	if p.topic == nil {
+		return errors.New("Null topic error")
+	}
+
+	b, err := json.Marshal(m)
+	if err != nil {
+		return fmt.Errorf("Failed to marhal message: %v", err)
+	}
+
+	_, err = p.topic.Publish(p.ctx, &pubsub.Message{Data: b}).Get(p.ctx)
+	if err != nil {
+		return fmt.Errorf("Error while publishing message: %v", err)
+	}
+
+	return nil
+
 }
