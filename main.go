@@ -20,11 +20,13 @@ func main() {
 	// TODO: externalize channel size
 	messages := make(chan Message, 10)
 
-	// configure publisher
-	p, pErr := newPublisher()
-	if pErr != nil {
-		log.Fatal(pErr)
+	// configure PubSub Helper
+	ps, err := newPSHelper()
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	pub := &publisher{ps: ps}
 
 	// configure ingester
 	ingester := newIngester()
@@ -34,11 +36,13 @@ func main() {
 	}
 	defer ingester.stop()
 
+	go process(ps)
+
 	go func() {
 		for {
 			select {
 			case m := <-messages:
-				p.pub(m)
+				pub.publish(m)
 			}
 		}
 	}()

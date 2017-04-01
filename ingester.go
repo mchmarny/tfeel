@@ -59,7 +59,7 @@ func (i *ingester) start(s []string, ch chan<- Message) error {
 			Body: tweet.Text,
 		}
 		ch <- msg
-		//fmt.Println(msg.toString())
+		//fmt.Print(".")
 	}
 
 	// Tweet filter
