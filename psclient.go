@@ -27,7 +27,7 @@ func newPSHelper() (*psHelper, error) {
 
 	topicName := os.Getenv("PUBSUB_TOPIC")
 	if topicName == "" {
-		return nil, errors.New("GCP PubSub topic name variable required (PUBSUB_TOPIC)")
+		topicName = "messages"
 	}
 
 	saFilePath := os.Getenv("SERVICE_ACCOUNT_FILE_PATH")

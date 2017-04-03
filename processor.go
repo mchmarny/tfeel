@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"golang.org/x/net/context"
@@ -14,8 +13,7 @@ func process(ps *psHelper) {
 
 	subName := os.Getenv("PUBSUB_SUBSCRIPTION_NAME")
 	if subName == "" {
-		log.Fatal("GCP PubSub subscription name variable required (PUBSUB_SUBSCRIPTION_NAME)")
-		return
+		subName = "events"
 	}
 
 	sub, err := ps.client.CreateSubscription(ps.ctx, subName, ps.topic, 0, nil)
