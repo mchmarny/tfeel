@@ -25,3 +25,6 @@ _testmain.go
 
 # bin
 tfeel
+
+secrets.sh
+service-account.json
