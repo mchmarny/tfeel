@@ -24,13 +24,13 @@ func newIngester() *ingester {
 }
 
 func (i *ingester) stop() {
-	fmt.Println("Stopping Ingester...")
+	log.Println("Stopping Ingester...")
 	if i.stream != nil {
 		i.stream.Stop()
 	}
 }
 
-func (i *ingester) start(s []string, ch chan<- Message) error {
+func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 
 	consumerKey := os.Getenv("T_CONSUMER_KEY")
 	consumerSecret := os.Getenv("T_CONSUMER_SECRET")
@@ -40,6 +40,8 @@ func (i *ingester) start(s []string, ch chan<- Message) error {
 	if consumerKey == "" || consumerSecret == "" || accessToken == "" || accessSecret == "" {
 		return errors.New("Both, consumer key/secret and access token/secret are required")
 	}
+
+	query := strings.Join(s, ",")
 
 	// init convif
 	config := oauth1.NewConfig(consumerKey, consumerSecret)
@@ -52,14 +54,14 @@ func (i *ingester) start(s []string, ch chan<- Message) error {
 
 	//Tweet processor
 	demux.Tweet = func(tweet *twitter.Tweet) {
-		msg := Message{
-			ID:   tweet.IDStr,
-			On:   tweet.CreatedAt,
-			By:   tweet.User.ScreenName,
-			Body: tweet.Text,
+		msg := MiniTweet{
+			Query: query,
+			ID:    tweet.IDStr,
+			On:    tweet.CreatedAt,
+			By:    strings.ToLower(tweet.User.ScreenName),
+			Body:  tweet.Text,
 		}
 		ch <- msg
-		//fmt.Print(".")
 	}
 
 	// Tweet filter
@@ -69,7 +71,7 @@ func (i *ingester) start(s []string, ch chan<- Message) error {
 		Language:      []string{"en"},
 	}
 
-	fmt.Println("Starting Ingest For: " + strings.Join(s, ","))
+	fmt.Printf("Starting Ingest For: " + strings.Join(s, ","))
 
 	// Start stream
 	stream, err := client.Streams.Filter(filterParams)

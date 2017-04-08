@@ -1,43 +1,77 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
+	"log"
 
 	"golang.org/x/net/context"
 
 	"cloud.google.com/go/pubsub"
 )
 
-func process(ps *psHelper) {
+const (
+	subTweetsEvents = "tweets-events"
+)
 
-	subName := os.Getenv("PUBSUB_SUBSCRIPTION_NAME")
-	if subName == "" {
-		subName = "events"
-	}
+func process(ps *pubSubHelper, r chan<- ProcessResult) {
 
-	sub, err := ps.client.CreateSubscription(ps.ctx, subName, ps.topic, 0, nil)
-	if err != nil {
-		fmt.Printf("Subscription already exists: %v", err)
+	sh, shErr := newSentimentHelper()
+	if shErr != nil {
+		log.Printf("Error while creating sentiment helper: %v", shErr)
 	}
 
 	// TODO: atach to the kill envent
 	waitCancel := false
 	cctx, cancel := context.WithCancel(ps.ctx)
+	sub := ps.client.Subscription(subTweetsEvents)
 	subErr := sub.Receive(cctx, func(c context.Context, m *pubsub.Message) {
-		content := string(m.Data)
-		fmt.Printf("Body: %v", content)
-		fmt.Printf("Ack: %v on %v", m.ID, m.PublishTime)
+
+		fmt.Printf("Processing: %#v", m.ID)
+
+		var mt MiniTweet
+		if err := json.Unmarshal(m.Data, &mt); err != nil {
+			log.Printf("Error while decoding tweet data: %#v", err)
+			m.Nack()
+			return
+		}
+
+		// p := Process{}
+		//fmt.Printf("Body: %v", content)
+		//fmt.Printf("Ack: %v on %v", m.ID, m.PublishTime)
 		if waitCancel {
 			m.Nack()
 			cancel()
 		} else {
+
+			// score
+			score, aErr := sh.scoreSentiment(mt.Body)
+			if aErr != nil {
+				log.Printf("Error while scoring: %v", aErr)
+			}
+			//fmt.Printf("ID:%v Score:%v\n", m.ID, score)
+
+			// analyze
+			args, eErr := sh.analyzeEntities(mt.Body)
+			if eErr != nil {
+				log.Printf("Error while analyzing: %v", eErr)
+			}
+			//fmt.Printf("ID:%v Attributes:%v\n", m.ID, args)
+
+			result := ProcessResult{
+				SourceID:         mt.ID,
+				SentimentScore:   score,
+				EntityAttributes: args,
+			}
+
+			r <- result
+
 			m.Ack()
 		}
 	})
 
 	if subErr != nil {
-		fmt.Printf("Error on subcsription: %v", subErr)
+		log.Printf("Error on subcsription: %v", subErr)
 	}
 
 }

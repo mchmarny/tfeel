@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -13,36 +15,54 @@ import (
 
 func main() {
 
-	// TODO: externalize
-	searchTerms := []string{"google", "cloud", "data", "partner"}
+	projectID := flag.String("p", "", "GCP Project ID")
+	queryFlag := flag.String("q", "", "Query args (e.g. golang, code, cloud)")
+	flag.Parse()
+
+	if len(*projectID) < 1 {
+		log.Fatal("ProjectID required")
+	}
+
+	if len(*queryFlag) < 1 {
+		log.Fatal("Query required")
+	}
+
+	conf := &Config{
+		Query:     strings.Split(*queryFlag, ","),
+		ProjectID: *projectID,
+	}
 
 	// messages channel with some buffer
-	// TODO: externalize channel size
-	messages := make(chan Message, 10)
+	messages := make(chan MiniTweet)
+	results := make(chan ProcessResult)
 
 	// configure PubSub Helper
-	ps, err := newPSHelper()
+	ps, err := newPubSubHelper(conf.ProjectID)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	pub := &publisher{ps: ps}
+	// Instantiate publisher
+	pub := getPublisher(ps)
 
 	// configure ingester
 	ingester := newIngester()
-	iErr := ingester.start(searchTerms, messages)
+	iErr := ingester.start(conf.Query, messages)
 	if iErr != nil {
 		log.Fatal(iErr)
 	}
 	defer ingester.stop()
 
-	go process(ps)
+	// start processing
+	go process(ps, results)
 
 	go func() {
 		for {
 			select {
 			case m := <-messages:
-				pub.publish(m)
+				pub.publishTweet(m)
+			case r := <-results:
+				pub.publishResult(r)
 			}
 		}
 	}()
