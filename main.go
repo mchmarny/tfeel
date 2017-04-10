@@ -1,11 +1,9 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 )
 
@@ -15,26 +13,14 @@ import (
 
 func main() {
 
-	projectID := flag.String("p", "", "GCP Project ID")
-	queryFlag := flag.String("q", "", "Query args (e.g. golang, code, cloud)")
-	flag.Parse()
-
-	if len(*projectID) < 1 {
-		log.Fatal("ProjectID required")
-	}
-
-	if len(*queryFlag) < 1 {
-		log.Fatal("Query required")
-	}
-
-	conf := &Config{
-		Query:     strings.Split(*queryFlag, ","),
-		ProjectID: *projectID,
+	conf, err := getConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// messages channel with some buffer
-	messages := make(chan MiniTweet)
-	results := make(chan ProcessResult)
+	messages := make(chan MiniTweet, conf.MessageChannelBuffer)
+	results := make(chan ProcessResult, conf.ResultChannelBuffer)
 
 	// configure PubSub Helper
 	ps, err := newPubSubHelper(conf.ProjectID)
@@ -56,6 +42,7 @@ func main() {
 	// start processing
 	go process(ps, results)
 
+	// wait for signal
 	go func() {
 		for {
 			select {

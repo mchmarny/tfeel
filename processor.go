@@ -14,6 +14,13 @@ const (
 	subTweetsEvents = "tweets-events"
 )
 
+// ProcessResult represents processed Message and it's content
+type ProcessResult struct {
+	SourceID         string  `json:"id"`
+	SentimentScore   float32 `json:"score"`
+	EntityAttributes string  `json:"parts"`
+}
+
 func process(ps *pubSubHelper, r chan<- ProcessResult) {
 
 	sh, shErr := newSentimentHelper()

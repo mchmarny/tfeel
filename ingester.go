@@ -11,6 +11,20 @@ import (
 	"github.com/dghubble/oauth1"
 )
 
+// MiniTweet represents simple tweet content
+type MiniTweet struct {
+	Query string `json:"query"`
+	ID    string `json:"id"`
+	On    string `json:"on"`
+	By    string `json:"by"`
+	Body  string `json:"body"`
+}
+
+// toString returns readable string representation of the MiniTweet struct
+func (m *MiniTweet) toString() string {
+	return fmt.Sprintf("ID:%v, On:%v, By:%v, Body:%v", m.ID, m.On, m.By, m.Body)
+}
+
 /*
 	Keys: https://apps.twitter.com/app/13608793/keys
 */
@@ -30,6 +44,8 @@ func (i *ingester) stop() {
 	}
 }
 
+// start initiates the Tweeter stream subscription and pumps all messages into
+// the passed in channel
 func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 
 	consumerKey := os.Getenv("T_CONSUMER_KEY")
