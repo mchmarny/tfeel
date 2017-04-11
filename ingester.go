@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
@@ -68,12 +69,22 @@ func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 	client := twitter.NewClient(httpClient)
 	demux := twitter.NewSwitchDemux()
 
+	// Tue Apr 11 15:49:40 +0000 2017
+	layoutTwitter := "Mon Jan 02 15:04:05 -0700 2006"
+	layoutBigQuery := "2006-01-02 15:04:05"
+
 	//Tweet processor
 	demux.Tweet = func(tweet *twitter.Tweet) {
+
+		tsTest, err := time.Parse(layoutTwitter, tweet.CreatedAt)
+		if err != nil {
+			fmt.Printf("Error formatting Twitter timestamp %v", err)
+		}
+
 		msg := MiniTweet{
 			Query: query,
 			ID:    tweet.IDStr,
-			On:    tweet.CreatedAt,
+			On:    tsTest.Format(layoutBigQuery),
 			By:    strings.ToLower(tweet.User.ScreenName),
 			Body:  tweet.Text,
 		}
@@ -87,7 +98,7 @@ func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 		Language:      []string{"en"},
 	}
 
-	fmt.Printf("Starting Ingest For: " + strings.Join(s, ","))
+	fmt.Printf("Starting Ingest For: %v\n", strings.Join(s, ","))
 
 	// Start stream
 	stream, err := client.Streams.Filter(filterParams)

@@ -49,10 +49,10 @@ func publish(ctx context.Context, t *pubsub.Topic, m interface{}) error {
 	result := t.Publish(ctx, msg)
 	id, err := result.Get(ctx)
 	if err != nil {
-		return fmt.Errorf("Error while publishing message: %v", err)
+		return fmt.Errorf("Error while publishing message: %v:%v", err, id)
 	}
 
-	fmt.Printf("Published %v ID:%v\n", t.String(), id)
+	//fmt.Printf("Published %v ID:%v\n", t.String(), id)
 	return nil
 
 }

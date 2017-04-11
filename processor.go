@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"golang.org/x/net/context"
@@ -34,7 +33,7 @@ func process(ps *pubSubHelper, r chan<- ProcessResult) {
 	sub := ps.client.Subscription(subTweetsEvents)
 	subErr := sub.Receive(cctx, func(c context.Context, m *pubsub.Message) {
 
-		fmt.Printf("Processing: %#v", m.ID)
+		//fmt.Printf("Processing: %#v", m.ID)
 
 		var mt MiniTweet
 		if err := json.Unmarshal(m.Data, &mt); err != nil {
