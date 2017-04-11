@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
@@ -12,6 +13,14 @@ import (
 */
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		// Wait for SIGINT and SIGTERM (HIT CTRL-C)
+		ch := make(chan os.Signal)
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+		log.Println(<-ch)
+		cancel()
+	}()
 
 	conf, err := getConfig()
 	if err != nil {
@@ -42,21 +51,14 @@ func main() {
 	// start processing
 	go process(ps, results)
 
-	// wait for signal
-	go func() {
-		for {
-			select {
-			case m := <-messages:
-				pub.publishTweet(m)
-			case r := <-results:
-				pub.publishResult(r)
-			}
+	for {
+		select {
+		case <-ctx.Done():
+			break
+		case m := <-messages:
+			pub.publishTweet(m)
+		case r := <-results:
+			pub.publishResult(r)
 		}
-	}()
-
-	// Wait for SIGINT and SIGTERM (HIT CTRL-C)
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	log.Println(<-ch)
-
+	}
 }
