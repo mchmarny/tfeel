@@ -85,7 +85,7 @@ func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 			By:    strings.ToLower(tweet.User.ScreenName),
 			Body:  tweet.Text,
 		}
-		log.Printf("I: %v", msg.ID)
+		//log.Printf("I: %v", msg.ID)
 		ch <- msg
 	}
 

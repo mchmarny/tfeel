@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 
 	"golang.org/x/net/context"
@@ -21,19 +23,18 @@ func main() {
 
 	// START CONFIG
 	defaultProjectID := os.Getenv("GCLOUD_PROJECT")
-	projectFlag := flag.String("projectID", defaultProjectID, "GCP Project ID")
+	flag.StringVar(&projectID, "projectID", defaultProjectID, "GCP Project ID")
 	queryFlag := flag.String("query", "", "Query args (e.g. golang, code, cloud)")
 	flag.Parse()
 
-	if len(*projectFlag) < 1 {
-		log.Panic("ProjectID argument required")
+	if projectID == "" {
+		log.Fatal("ProjectID argument required")
 	}
 
-	if len(*queryFlag) < 1 {
-		log.Panic("Query argument required")
+	if *queryFlag == "" {
+		log.Fatal("Query argument required")
 	}
 	queryArgs := strings.Split(*queryFlag, ",")
-	projectID = *projectFlag
 	// END CONFIG
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -52,13 +53,11 @@ func main() {
 	messages := make(chan MiniTweet)
 	results := make(chan ProcessResult)
 
-	// initialize PubSub client
-	initPubSub()
+	// initialize publsher
+	initPublisher()
 
 	// start processing
-	go func() {
-		process(results)
-	}()
+	go process(results)
 
 	// configure ingester
 	ingester := newIngester()
@@ -68,14 +67,26 @@ func main() {
 	}
 	defer ingester.stop()
 
+	// counter stuff
+	var mu sync.Mutex
+	processedCount := 0
+	aquiredCount := 0
+
 	for {
 		select {
 		case <-appContext.Done():
 			break
 		case m := <-messages:
 			publish(tweetTopic, m)
+			mu.Lock()
+			aquiredCount++
+			mu.Unlock()
 		case r := <-results:
 			publish(resultTopic, r)
+			mu.Lock()
+			processedCount++
+			fmt.Printf("\rAquired:%d Processed:%d", aquiredCount, processedCount)
+			mu.Unlock()
 		}
 	}
 }
