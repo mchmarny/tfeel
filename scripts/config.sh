@@ -8,7 +8,6 @@
 
 # Google
 export APP_NAME=$(basename "$PWD")
-export GCLOUD_PROJECT="mchmarny-dev"
 export PUBSUB_TW_TOPIC="tweets"
 export PUBSUB_RZ_TOPIC="results"
 export PUBSUB_TW_SUB="${PUBSUB_TW_TOPIC}-events"
