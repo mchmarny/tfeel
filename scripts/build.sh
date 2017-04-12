@@ -12,4 +12,5 @@ docker build ./ \
   --build-arg APP_QUERY="google, gcp, bigquery, spanner"
 
 # run
-# docker run -i -t (+last IMAGE ID from 'docker imaages')
+# LAST_IMAGE=$(docker images | grep -E '^golang.*latest' | awk '{print $3}')
+# docker run -i -t $LAST_IMAGE
