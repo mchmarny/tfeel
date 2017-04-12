@@ -6,7 +6,7 @@
 # Folders
 _obj
 _test
-.DS_Store
+*.DS_Store
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -29,3 +29,4 @@ tfeel
 
 secrets.sh
 service-account.json
+service-account-key.json

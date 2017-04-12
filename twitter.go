@@ -12,6 +12,11 @@ import (
 	"github.com/dghubble/oauth1"
 )
 
+const (
+	layoutTwitter  = "Mon Jan 02 15:04:05 -0700 2006"
+	layoutBigQuery = "2006-01-02 15:04:05"
+)
+
 // MiniTweet represents simple tweet content
 type MiniTweet struct {
 	Query string `json:"query"`
@@ -25,10 +30,6 @@ type MiniTweet struct {
 func (m *MiniTweet) toString() string {
 	return fmt.Sprintf("ID:%v, On:%v, By:%v, Body:%v", m.ID, m.On, m.By, m.Body)
 }
-
-/*
-	Keys: https://apps.twitter.com/app/13608793/keys
-*/
 
 type ingester struct {
 	stream *twitter.Stream
@@ -69,10 +70,6 @@ func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 	client := twitter.NewClient(httpClient)
 	demux := twitter.NewSwitchDemux()
 
-	// Tue Apr 11 15:49:40 +0000 2017
-	layoutTwitter := "Mon Jan 02 15:04:05 -0700 2006"
-	layoutBigQuery := "2006-01-02 15:04:05"
-
 	//Tweet processor
 	demux.Tweet = func(tweet *twitter.Tweet) {
 
@@ -88,6 +85,7 @@ func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 			By:    strings.ToLower(tweet.User.ScreenName),
 			Body:  tweet.Text,
 		}
+		log.Printf("I: %v", msg.ID)
 		ch <- msg
 	}
 
@@ -98,7 +96,7 @@ func (i *ingester) start(s []string, ch chan<- MiniTweet) error {
 		Language:      []string{"en"},
 	}
 
-	fmt.Printf("Starting Ingest For: %v\n", strings.Join(s, ","))
+	log.Printf("Starting Ingest For: %v\n", strings.Join(s, ","))
 
 	// Start stream
 	stream, err := client.Streams.Filter(filterParams)

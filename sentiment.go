@@ -5,32 +5,24 @@ import (
 	"log"
 
 	lang "cloud.google.com/go/language/apiv1"
-	"golang.org/x/net/context"
 	langpb "google.golang.org/genproto/googleapis/cloud/language/v1"
 )
 
-type sentimentHelper struct {
-	ctx    context.Context
-	client *lang.Client
-}
+var (
+	langClient *lang.Client
+)
 
-func newSentimentHelper() (*sentimentHelper, error) {
-	ctx := context.Background()
-	client, err := lang.NewClient(ctx)
+func initLangAPI() {
+	client, err := lang.NewClient(appContext)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		log.Panicf("Failed to create client: %v", err)
 	}
-
-	return &sentimentHelper{
-		ctx:    ctx,
-		client: client,
-	}, nil
-
+	langClient = client
 }
 
-func (h *sentimentHelper) scoreSentiment(s string) (float32, error) {
+func scoreSentiment(s string) (float32, error) {
 
-	result, err := h.client.AnalyzeSentiment(h.ctx, &langpb.AnalyzeSentimentRequest{
+	result, err := langClient.AnalyzeSentiment(appContext, &langpb.AnalyzeSentimentRequest{
 		Document: &langpb.Document{
 			Source: &langpb.Document_Content{
 				Content: s,
@@ -42,14 +34,11 @@ func (h *sentimentHelper) scoreSentiment(s string) (float32, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	return result.DocumentSentiment.Score, nil
-
 }
 
-func (h *sentimentHelper) analyzeEntities(s string) (string, error) {
-
-	result, err := h.client.AnalyzeEntities(h.ctx, &langpb.AnalyzeEntitiesRequest{
+func analyzeEntities(s string) (string, error) {
+	result, err := langClient.AnalyzeEntities(appContext, &langpb.AnalyzeEntitiesRequest{
 		Document: &langpb.Document{
 			Source: &langpb.Document_Content{
 				Content: s,
@@ -66,7 +55,5 @@ func (h *sentimentHelper) analyzeEntities(s string) (string, error) {
 	for _, e := range result.Entities {
 		b.WriteString("(" + e.Name + ":" + e.Type.String() + ") ")
 	}
-
 	return b.String(), nil
-
 }
