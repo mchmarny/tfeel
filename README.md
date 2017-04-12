@@ -3,7 +3,7 @@
 Short for Twitter Feeling... simple sentiment analyses over tweeter data for
 specific terms using Google Cloud services.
 
-![tfeel data flow](/../master/images/tfeel-flow.png?raw=true "tfeel data flow")
+![tfeel data flow](/../master/images/tfeel-flow-chart.png?raw=true "tfeel data flow")
 
 > All GCP services used in this example can be run under the GCP Free Tier
 plan. More more information see https://cloud.google.com/free/
