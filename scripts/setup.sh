@@ -43,6 +43,8 @@ bq mk tfeel
 bq mk --schema query:string,id:string,on:string,by:string,body:string -t tfeel.tweets
 bq mk --schema id:string,score:float,parts:string -t tfeel.results
 
+
+# This will not succeed until 2.0 :(
 echo "Creating dataflow job to drain tweet topic to BigQuery..."
 gcloud beta dataflow jobs run ${APP_NAME}-${PUBSUB_TW_TOPIC} \
   --gcs-location gs://dataflow-templates/pubsub-to-bigquery/template_file \
