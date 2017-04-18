@@ -42,5 +42,4 @@ The cleanup of all the resources created in this application can be accomplished
 
 * Tests, yes please
 * Minimize account service roles (currently, project editor)
-* Add app containerization => [GKE](https://cloud.google.com/container-engine/)
 * Add Spanner DB to keep user state (trend user-level sentiment)
