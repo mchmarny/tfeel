@@ -1,7 +1,14 @@
 # TFEEL
 
+> Personal project, does not represent Google
+
 Short for Twitter Feeling... simple sentiment analyses over tweeter data for
-specific terms using Google Cloud services.
+specific terms using Google Cloud services:
+
+* [Google Container Engine](https://cloud.google.com/container-engine/)
+* [Google NLP API](https://cloud.google.com/natural-language/)
+* [Google Dataflow](https://cloud.google.com/dataflow/)
+* [Google Pub/Sub](https://cloud.google.com/pubsub/)
 
 ![tfeel data flow](/../master/images/tfeel-flow.png?raw=true "tfeel data flow")
 
