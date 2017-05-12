@@ -18,7 +18,7 @@ plan. More more information see https://cloud.google.com/free/
 ## Configuration
 
 Edit the `scripts/config.sh` file with your Twitter API info. Alternatively
-define the following environment variables
+define the following environment variables. Instractions how to configure your Twitter API access codes are found [here](http://docs.inboundnow.com/guide/create-twitter-application/):
 
 ```
 # export T_CONSUMER_KEY=""
@@ -29,13 +29,7 @@ define the following environment variables
 
 ## Dependencies
 
-`tfeel` depends on the following GCP services:
-
-* [Cloud Pub/Sub](https://cloud.google.com/pubsub/)
-* [BigQuery](https://cloud.google.com/bigquery/)
-* [Dataflow](https://cloud.google.com/dataflow/)
-
-You can set all these resource dependencies using the `scripts/setup.sh` script. This script will also configure a service account for the `tfeel`  application to run under.
+`tfeel` depends on a few GCP services. You can setup these servicesmanually followingthe commandsfound in the `scripts/setup.sh` file or just execute that script. This script will also configure a service account for the `tfeel`  application to run under.
 
 ## Run
 
@@ -49,4 +43,3 @@ The cleanup of all the resources created in this application can be accomplished
 
 * Tests, yes please
 * Minimize account service roles (currently, project editor)
-* Add Spanner DB to keep user state (trend user-level sentiment)
