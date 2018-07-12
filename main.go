@@ -85,7 +85,7 @@ func main() {
 			publish(resultTopic, r)
 			mu.Lock()
 			processedCount++
-			fmt.Printf("\aAcquired:%d Processed:%d", acquiredCount, processedCount)
+			fmt.Printf("\aAcquired:%d Processed:%d\n", acquiredCount, processedCount)
 			mu.Unlock()
 		}
 	}
