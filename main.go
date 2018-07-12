@@ -16,25 +16,25 @@ import (
 var (
 	appContext context.Context
 	projectID  string
+	queryFlag  string
 	canceling  bool
 )
 
 func main() {
 
 	// START CONFIG
-	defaultProjectID := os.Getenv("GCLOUD_PROJECT")
-	flag.StringVar(&projectID, "projectID", defaultProjectID, "GCP Project ID")
-	queryFlag := flag.String("query", "", "Query args (e.g. golang, code, cloud)")
+	flag.StringVar(&projectID, "projectID", os.Getenv("GCLOUD_PROJECT"), "GCP Project ID")
+	flag.StringVar(&queryFlag, "query", os.Getenv("T_QUERY"), "Query args (e.g. golang, code, cloud)")
 	flag.Parse()
 
 	if projectID == "" {
 		log.Fatal("ProjectID argument required")
 	}
 
-	if *queryFlag == "" {
+	if queryFlag == "" {
 		log.Fatal("Query argument required")
 	}
-	queryArgs := strings.Split(*queryFlag, ",")
+	queryArgs := strings.Split(queryFlag, ",")
 	// END CONFIG
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -70,7 +70,7 @@ func main() {
 	// counter stuff
 	var mu sync.Mutex
 	processedCount := 0
-	aquiredCount := 0
+	acquiredCount := 0
 
 	for {
 		select {
@@ -79,13 +79,13 @@ func main() {
 		case m := <-messages:
 			publish(tweetTopic, m)
 			mu.Lock()
-			aquiredCount++
+			acquiredCount++
 			mu.Unlock()
 		case r := <-results:
 			publish(resultTopic, r)
 			mu.Lock()
 			processedCount++
-			fmt.Printf("\rAquired:%d Processed:%d", aquiredCount, processedCount)
+			fmt.Printf("\aAcquired:%d Processed:%d", acquiredCount, processedCount)
 			mu.Unlock()
 		}
 	}

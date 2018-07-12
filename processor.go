@@ -79,7 +79,7 @@ func process(r chan<- ProcessResult) {
 	})
 
 	if err != nil {
-		log.Printf("Error on subcsription: %v", err)
+		log.Printf("Error on subscription: %v", err)
 	}
 
 }
